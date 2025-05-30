@@ -76,7 +76,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        const { data, error } = supabase.from('users').select('id, password, account_type').eq('username', username);
+        const { data, error } = await supabase.from('users').select('id, password, account_type').eq('username', username);
         if (error) {
             throw new Error(error.message);
         }
