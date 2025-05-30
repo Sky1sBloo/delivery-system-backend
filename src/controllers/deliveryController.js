@@ -1,4 +1,21 @@
 import supabase from '../database.js';
+
+
+/**
+ * Retrieves all possible deliveries
+ */
+export const retrieveDeliveries = async (_, res, next) => {
+    try {
+        const {data, error} = supabase.from('delivery').select();
+        if (error) {
+            throw new Error(error.message);
+        }
+        return res.status(200).send(data);
+    } catch (error) {
+        next(error);
+    }
+}
+
 /**
  * Addes a new delivery
  * @param req.body
@@ -61,8 +78,27 @@ export const editDeliveryInfo = async (req, res, next) => {
         next(error);
     }
 }
+/**
+ * Deletes an existing delivery
+ * @param req.body
+ * {
+ *      id: number,
+ * }
+ */
+export const deleteDelivery = async (req, res, next) => {
+    try {
+        if (req.body.id == undefined) {
+            return res.status(400).json({message: 'Missing body param: id'});
+        }
+        const { error } = await supabase.from('delivery').delete().eq(req.body.id);
+        if (error) {
+            throw new Error(error);
+        }
 
-export const deleteDelivery = (req, res, next) => {
+        return res.status(200).json({ message: 'Deleted delivery' });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export const suggestDeliveryRoute = (req, res, next) => {
