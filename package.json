@@ -16,7 +16,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "compile": "gcc c_src/a_star.c -o dist/a_star"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
