@@ -36,7 +36,6 @@ export const addDelivery = async (req, res, next) => {
  * Edits an existing delivery
  * @param req.body
  * {
- *      id: number,
  *      product_name: string,
  *      sender: string,
  *      recipient: string,
@@ -46,10 +45,13 @@ export const addDelivery = async (req, res, next) => {
  *      deadline: timestamp,
  *      status: delivery_status
  * }
+ *
+ * @param req.params
+ * id: number
  */
 export const editDeliveryInfo = async (req, res, next) => {
     try {
-        const { error } = await supabase.from('delivery').update(req.body).eq('id', req.body.id);
+        const { error } = await supabase.from('delivery').update(req.body).eq('id', req.params.id);
         if (error) {
             throw new Error(error);
         }
