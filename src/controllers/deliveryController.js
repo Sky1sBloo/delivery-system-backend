@@ -26,16 +26,17 @@ export const addDelivery = async (req, res, next) => {
             throw new Error(error);
         }
 
-        return res.status(201).json({message: 'Created new delivery'});
+        return res.status(201).json({ message: 'Created new delivery' });
     } catch (error) {
         next(error);
     }
 }
 
 /**
- * Addes a new delivery
+ * Edits an existing delivery
  * @param req.body
  * {
+ *      id: number,
  *      product_name: string,
  *      sender: string,
  *      recipient: string,
@@ -46,7 +47,17 @@ export const addDelivery = async (req, res, next) => {
  *      status: delivery_status
  * }
  */
-export const editDeliveryInfo = (req, res, next) => {
+export const editDeliveryInfo = async (req, res, next) => {
+    try {
+        const { error } = await supabase.from('delivery').update(req.body).eq('id', req.body.id);
+        if (error) {
+            throw new Error(error);
+        }
+
+        return res.status(200).json({ message: 'Updated delivery' });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export const deleteDelivery = (req, res, next) => {
