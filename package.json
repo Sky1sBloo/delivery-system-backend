@@ -1,0 +1,31 @@
+{
+  "name": "delivery-system-backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Sky1sBloo/delivery-system-backend#readme",
+  "bugs": {
+    "url": "https://github.com/Sky1sBloo/delivery-system-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sky1sBloo/delivery-system-backend.git"
+  },
+  "license": "ISC",
+  "author": "Sky1sBloo",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
