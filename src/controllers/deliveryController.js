@@ -112,12 +112,14 @@ export const deleteDelivery = async (req, res, next) => {
  * }
  */
 export const getDeliveryRoute = async (req, res) => {
-    if (!req.body.source || !req.body.destination) {
+    if (!req.body || !req.body.source || !req.body.destination) {
         return res.status(400).json({ message: 'Missing source/destination' });
     }
 
-    const suggestedPath = suggestDeliveryRoute(req.body.source, req.body.destination).catch((errorMsg) => {
-        return res.status(400).json({ message: errorMsg })
-    });
-    return res.status(200).json({ path: suggestedPath });
+    try {
+        const suggestedPath = await suggestDeliveryRoute(req.body.source, req.body.destination);
+        return res.status(200).json({ path: suggestedPath });
+    } catch (error) {
+        return res.status(400).json({ message: error.toString() })
+    }
 }
