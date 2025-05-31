@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', retrieveDeliveries);
 router.post('/', addDelivery);
-router.post('/:id', editDeliveryInfo);
+router.put('/:id', editDeliveryInfo);
 router.delete('/:id', deleteDelivery);
 router.get('/route', suggestDeliveryRoute);
 
