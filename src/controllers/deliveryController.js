@@ -1,4 +1,5 @@
 import supabase from '../database.js';
+import { suggestDeliveryRoute } from '../handlers/deliveries.js';
 
 
 /**
@@ -6,7 +7,7 @@ import supabase from '../database.js';
  */
 export const retrieveDeliveries = async (_, res, next) => {
     try {
-        const {data, error} = supabase.from('delivery').select();
+        const { data, error } = supabase.from('delivery').select();
         if (error) {
             throw new Error(error.message);
         }
@@ -88,7 +89,7 @@ export const editDeliveryInfo = async (req, res, next) => {
 export const deleteDelivery = async (req, res, next) => {
     try {
         if (req.body.id == undefined) {
-            return res.status(400).json({message: 'Missing body param: id'});
+            return res.status(400).json({ message: 'Missing body param: id' });
         }
         const { error } = await supabase.from('delivery').delete().eq(req.body.id);
         if (error) {
@@ -101,5 +102,22 @@ export const deleteDelivery = async (req, res, next) => {
     }
 }
 
-export const suggestDeliveryRoute = (req, res, next) => {
+/**
+ * Suggests a delivery route and returns its recommended path
+ *
+ * @param req.body
+ * {
+ *      source: number,
+ *      destination: number
+ * }
+ */
+export const getDeliveryRoute = async (req, res) => {
+    if (!req.body.source || !req.body.destination) {
+        return res.status(400).json({ message: 'Missing source/destination' });
+    }
+
+    const suggestedPath = suggestDeliveryRoute(req.body.source, req.body.destination).catch((errorMsg) => {
+        return res.status(400).json({ message: errorMsg })
+    });
+    return res.status(200).json({ path: suggestedPath });
 }
