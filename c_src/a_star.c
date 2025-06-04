@@ -47,6 +47,7 @@ int pq_pop()
     PriorityQueueNode last = pq[--pq_size];
 
     int i = 0;
+    pq[0] = last;
     while (i * 2 + 1 < pq_size) {
         int left = i * 2 + 1, right = i * 2 + 2, smallest = i;
         if (pq[left].f < pq[smallest].f)
