@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 
-const program_file_path = './dist/a_star';
+const a_star_file_path = './dist/a_star';
+const knapsack_file_path = './dist/knapsack';
 
 // Must be relative to the program
 const graph_file = './src/paths/graph.txt'
@@ -13,7 +14,7 @@ const heuristic_file = './src/paths/heuristic.txt'
  */
 export const suggestDeliveryRoute = (source, destination) => {
     return new Promise((resolve, reject) => {
-        const aStarProcess = spawn(program_file_path, [graph_file, heuristic_file, source, destination]);
+        const aStarProcess = spawn(a_star_file_path, [graph_file, heuristic_file, source, destination]);
         let output = -1;
         aStarProcess.stdout.on('data', suggestedPath => {
             output = suggestedPath.toString().trim();
@@ -35,4 +36,20 @@ export const suggestDeliveryRoute = (source, destination) => {
             reject(`Failed to start process: ${error.message}`);
         })
     })
+}
+
+/**
+ * Retrieves a efficient knapsack solution
+ * @param capacity: Capacity of the sack
+ * @param items: Array of object
+ * [
+ * {
+ * id: number,
+ * weight: number
+ * }
+ * ]
+ *
+ * @todo add filtering on items that are approaching deadline
+ */
+export const getKnapsackSolution = (capacity, items) => {
 }
