@@ -16,7 +16,7 @@ import supabase from '../username_database.js';
  *   accountType: 'management' || 'delivery'
  * }
  */
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
     try {
         const username = req.body.username;
         const password = req.body.password;
@@ -67,7 +67,7 @@ export const registerUser = async (req, res) => {
  *   password: string,
  * }
  */
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
     try {
         const username = req.body.username;
         const password = req.body.password;
