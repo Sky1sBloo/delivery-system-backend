@@ -1,13 +1,17 @@
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <float.h>
 
 #define MAX_NODES 1000
 #define MAX_EDGES 10000
+#define MAX_CITY_NAME 100
+#define MAX_ROUTE_NAME 100
 
 typedef struct {
     int to;
     double cost;
+    char route_name[MAX_ROUTE_NAME];
 } Edge;
 
 typedef struct {
@@ -25,13 +29,13 @@ double heuristics[MAX_NODES];
 double g_score[MAX_NODES];
 int came_from[MAX_NODES];
 int visited[MAX_NODES];
+char city_names[MAX_NODES][MAX_CITY_NAME];
 
 // Min-heap priority queue
 PriorityQueueNode pq[MAX_EDGES];
 int pq_size = 0;
 
-void pq_push(int node, double f)
-{
+void pq_push(int node, double f) {
     int i = pq_size++;
     while (i > 0 && pq[(i - 1) / 2].f > f) {
         pq[i] = pq[(i - 1) / 2];
@@ -41,21 +45,16 @@ void pq_push(int node, double f)
     pq[i].f = f;
 }
 
-int pq_pop()
-{
+int pq_pop() {
     int min_node = pq[0].node;
     PriorityQueueNode last = pq[--pq_size];
 
     int i = 0;
-    pq[0] = last;
     while (i * 2 + 1 < pq_size) {
         int left = i * 2 + 1, right = i * 2 + 2, smallest = i;
-        if (pq[left].f < pq[smallest].f)
-            smallest = left;
-        if (right < pq_size && pq[right].f < pq[smallest].f)
-            smallest = right;
-        if (smallest == i)
-            break;
+        if (pq[left].f < pq[smallest].f) smallest = left;
+        if (right < pq_size && pq[right].f < pq[smallest].f) smallest = right;
+        if (smallest == i) break;
         pq[i] = pq[smallest];
         i = smallest;
     }
@@ -63,14 +62,28 @@ int pq_pop()
     return min_node;
 }
 
-int pq_empty()
-{
+int pq_empty() {
     return pq_size == 0;
 }
 
-void read_graph(const char* filename)
-{
-    FILE* file = fopen(filename, "r");
+void read_city_mapping(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("City mapping file");
+        exit(EXIT_FAILURE);
+    }
+
+    int node_id;
+    char name[MAX_CITY_NAME];
+    while (fscanf(file, "%d = %[^\n]", &node_id, name) == 2) {
+        strcpy(city_names[node_id], name);
+    }
+
+    fclose(file);
+}
+
+void read_graph(const char *filename) {
+    FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Graph file");
         exit(EXIT_FAILURE);
@@ -78,16 +91,18 @@ void read_graph(const char* filename)
 
     int from, to;
     double cost;
-    while (fscanf(file, "%d %d %lf", &from, &to, &cost) == 3) {
-        graph[from].edges[graph[from].edge_count++] = (Edge) { to, cost };
+    char route[MAX_ROUTE_NAME];
+    while (fscanf(file, "%d %d %lf %s", &from, &to, &cost, route) == 4) {
+        Edge e = {to, cost};
+        strcpy(e.route_name, route);
+        graph[from].edges[graph[from].edge_count++] = e;
     }
 
     fclose(file);
 }
 
-void read_heuristic(const char* filename)
-{
-    FILE* file = fopen(filename, "r");
+void read_heuristic(const char *filename) {
+    FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Heuristic file");
         exit(EXIT_FAILURE);
@@ -102,26 +117,42 @@ void read_heuristic(const char* filename)
     fclose(file);
 }
 
-void reconstruct_path(int start, int goal)
-{
+void reconstruct_path(int start, int goal) {
     int path[MAX_NODES];
     int path_len = 0;
     for (int at = goal; at != -1; at = came_from[at]) {
         path[path_len++] = at;
     }
+
+    printf("\nOptimized Path:\n");
     for (int i = path_len - 1; i >= 0; i--) {
-        printf("%d", path[i]);
-        if (i > 0)
-            printf(" ");
+        printf("%s", city_names[path[i]]);
+        if (i > 0) printf(" -> ");
+    }
+    printf("\n\nRoutes Used:\n");
+
+    for (int i = path_len - 1; i > 0; i--) {
+        int from = path[i];
+        int to = path[i - 1];
+        // Find the route name in the graph
+        for (int j = 0; j < graph[from].edge_count; j++) {
+            if (graph[from].edges[j].to == to) {
+                printf("%s -> %s via %s (%.2lf km)\n",
+                       city_names[from], city_names[to],
+                       graph[from].edges[j].route_name,
+                       graph[from].edges[j].cost);
+                break;
+            }
+        }
     }
     printf("\n");
 }
 
-void a_star(int start, int goal)
-{
+void a_star(int start, int goal) {
     for (int i = 0; i < MAX_NODES; i++) {
         g_score[i] = DBL_MAX;
         came_from[i] = -1;
+        visited[i] = 0;
     }
 
     g_score[start] = 0;
@@ -135,8 +166,7 @@ void a_star(int start, int goal)
             return;
         }
 
-        if (visited[current])
-            continue;
+        if (visited[current]) continue;
         visited[current] = 1;
 
         for (int i = 0; i < graph[current].edge_count; i++) {
@@ -154,16 +184,16 @@ void a_star(int start, int goal)
     printf("No path found.\n");
 }
 
-int main(int argc, char* argv[])
-{
-    if (argc != 5) {
-        fprintf(stderr, "Usage: %s [graph_file] [heuristic_file] [start_node] [end_node]\n", argv[0]);
+int main(int argc, char *argv[]) {
+    if (argc != 6) {
+        fprintf(stderr, "Usage: %s [graph_file] [heuristic_file] [city_mapping_file] [start_node] [end_node]\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    int start_node = atoi(argv[3]);
-    int end_node = atoi(argv[4]);
+    int start_node = atoi(argv[4]);
+    int end_node = atoi(argv[5]);
 
+    read_city_mapping(argv[3]);
     read_graph(argv[1]);
     read_heuristic(argv[2]);
 

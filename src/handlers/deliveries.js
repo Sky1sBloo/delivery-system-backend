@@ -6,6 +6,7 @@ const knapsack_file_path = './dist/knapsack';
 // Must be relative to the program
 const graph_file = './src/paths/graph.txt'
 const heuristic_file = './src/paths/heuristic.txt'
+const city_mapping_file = './src/paths/city_mapping.txt'
 
 /*
  * Suggests a delivery route
@@ -14,7 +15,7 @@ const heuristic_file = './src/paths/heuristic.txt'
  */
 export const suggestDeliveryRoute = (source, destination) => {
     return new Promise((resolve, reject) => {
-        const aStarProcess = spawn(a_star_file_path, [graph_file, heuristic_file, source, destination]);
+        const aStarProcess = spawn(a_star_file_path, [graph_file, heuristic_file, city_mapping_file, source, destination]);
         let output = -1;
         aStarProcess.stdout.on('data', suggestedPath => {
             output = suggestedPath.toString().trim();
