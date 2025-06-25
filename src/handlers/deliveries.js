@@ -16,9 +16,9 @@ const city_mapping_file = './src/paths/city_mapping.txt'
 export const suggestDeliveryRoute = (source, destination) => {
     return new Promise((resolve, reject) => {
         const aStarProcess = spawn(a_star_file_path, [graph_file, heuristic_file, city_mapping_file, source, destination]);
-        let output = -1;
+        let output = '';
         aStarProcess.stdout.on('data', suggestedPath => {
-            output = suggestedPath.toString().trim();
+            output += suggestedPath.toString();
         });
 
         aStarProcess.stderr.on('data', () => {
@@ -26,10 +26,28 @@ export const suggestDeliveryRoute = (source, destination) => {
         });
 
         aStarProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve(output);
-            } else {
-                reject('Program returned error code');
+            try {
+                if (code !== 0) {
+                    reject('Program returned error code');
+                    return;
+                }
+                const lines = output.trim().split('\n');
+                const pathLine = lines.findIndex(line => line.startsWith('Optimized Path:')) + 1;
+
+                const routeLines = lines.filter(line => line.includes('via'));
+
+                // Removes the optimized path header
+                console.log(lines, "\nLine: \n", lines[pathLine]);
+                const path = lines[pathLine] 
+                    .split(' -> ')
+                    .map(city => city.trim());
+
+                resolve({
+                    path,
+                    route: routeLines 
+                });
+            } catch (err) {
+                reject(`Failed to load a* output: ` + err)
             }
         })
 

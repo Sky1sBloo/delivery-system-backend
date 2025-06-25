@@ -118,7 +118,7 @@ export const getDeliveryRoute = async (req, res) => {
 
     try {
         const suggestedPath = await suggestDeliveryRoute(req.body.source, req.body.destination);
-        return res.status(200).json({ path: suggestedPath });
+        return res.status(200).json(suggestedPath);
     } catch (error) {
         return res.status(400).json({ message: error.toString() })
     }
