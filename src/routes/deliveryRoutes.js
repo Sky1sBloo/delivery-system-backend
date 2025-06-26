@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addDelivery, deleteDelivery, editDeliveryInfo, retrieveDeliveries, getDeliveryRoute } from '../controllers/deliveryController.js';
+import { addDelivery, deleteDelivery, editDeliveryInfo, retrieveDeliveries, getDeliveryRoute, suggestDeliveryItems } from '../controllers/deliveryController.js';
 
 const router = Router();
 
@@ -8,5 +8,6 @@ router.post('/', addDelivery);
 router.put('/:id', editDeliveryInfo);
 router.delete('/:id', deleteDelivery);
 router.get('/route', getDeliveryRoute);
+router.get('/items', suggestDeliveryItems);
 
 export default router;

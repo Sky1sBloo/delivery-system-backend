@@ -4,7 +4,8 @@
  */
 
 import bcrypt from 'bcrypt';
-import supabase from '../username_database.js';
+import supabase from '../database.js';
+import express from 'express';
 
 /**
  * Registers the user
@@ -26,11 +27,11 @@ export const registerUser = async (req, res, next) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        if (userType !== 'management' && userType !== 'delivery') {
+        if (accountType !== 'management' && accountType !== 'delivery') {
             return res.status(400).json({ message: 'Invalid user type' });
         }
 
-        const usernameSQL = await supabase.from('users').select('id').eq('username', username);
+        const usernameSQL = await supabase.from('users').select('username').eq('username', username);
         if (usernameSQL.data == null || usernameSQL.error != null) {
             throw new Error(usernameSQL.error.message);
         }
@@ -40,14 +41,15 @@ export const registerUser = async (req, res, next) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const insertSQL = await supabase.from('users').insert({
+        const {error} = await supabase.from('users').insert({
             username: username,
             password: hashedPassword,
             account_type: accountType
-        }).select('id');
+        });
 
-        if (insertSQL.error != null) {
-            throw new Error(insertSQL.error);
+
+        if (error != null) {
+            throw new Error(error);
         }
         express.session.isLoggedIn = true;
         express.session.username = username;
@@ -76,7 +78,7 @@ export const loginUser = async (req, res, next) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        const { data, error } = await supabase.from('users').select('id, password, account_type').eq('username', username);
+        const { data, error } = await supabase.from('users').select('password, account_type').eq('username', username);
         if (error) {
             throw new Error(error.message);
         }
@@ -93,7 +95,7 @@ export const loginUser = async (req, res, next) => {
         express.session.account_type = user.account_type;
         express.session.isLoggedIn = true;
 
-        return res.status(200).json({message: 'Logged in'});
+        return res.status(200).json({ message: 'Logged in' });
     } catch (error) {
         next(error);
     }

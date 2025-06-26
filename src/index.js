@@ -1,6 +1,7 @@
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler.js';
 import deliveryRouter from './routes/deliveryRoutes.js';
+import userRouter from './routes/userRoutes.js';
 
 const app = express();
 
@@ -9,5 +10,6 @@ app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
 app.use(express.json());
-app.use(errorHandler);
 app.use('/api/delivery', deliveryRouter);
+app.use('/api/user', userRouter);
+app.use(errorHandler);

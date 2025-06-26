@@ -1,5 +1,5 @@
 import supabase from '../database.js';
-import { suggestDeliveryRoute } from '../handlers/deliveries.js';
+import { getKnapsackSolution, suggestDeliveryRoute } from '../handlers/deliveries.js';
 
 
 /**
@@ -24,8 +24,8 @@ export const retrieveDeliveries = async (_, res, next) => {
  *      product_name: string,
  *      sender: string,
  *      recipient: string,
- *      destination: string,
- *      source: string,
+ *      destination: number,
+ *      source: number,
  *      date_shipped: date,
  *      deadline: timestamp,
  *      status: delivery_status
@@ -39,7 +39,7 @@ export const addDelivery = async (req, res, next) => {
                 return res.status(400).json({ message: 'Missing body parameters' });
             }
         }
-        const { error } = supabase.from('delivery').insert(req.body);
+        const { error } = await supabase.from('delivery').insert(req.body).select();
         if (error) {
             throw new Error(error);
         }
@@ -111,7 +111,7 @@ export const deleteDelivery = async (req, res, next) => {
  *      destination: number
  * }
  */
-export const getDeliveryRoute = async (req, res) => {
+export const getDeliveryRoute = async (req, res, next) => {
     if (!req.body || !req.body.source || !req.body.destination) {
         return res.status(400).json({ message: 'Missing source/destination' });
     }
@@ -120,6 +120,42 @@ export const getDeliveryRoute = async (req, res) => {
         const suggestedPath = await suggestDeliveryRoute(req.body.source, req.body.destination);
         return res.status(200).json(suggestedPath);
     } catch (error) {
-        return res.status(400).json({ message: error.toString() })
+        next(error);
+    }
+}
+
+/**
+ * Suggests the items fit for the truck
+ * @param req.body
+ * {
+ *      source: number,
+ *      destination: number,
+ *      capacity: number
+ * }
+ */
+export const suggestDeliveryItems = async (req, res, next) => {
+    const { source, destination, capacity } = req.body;
+
+    if (source === undefined || destination === undefined || capacity === undefined) {
+        return res.status(400).json({ message: 'Missing required body params' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('delivery')
+            .select()
+            .eq('destination', req.body.destination)
+            .eq('source', req.body.source);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        const items = await getKnapsackSolution(capacity, data);
+
+        return res.status(200).json(items);
+
+    } catch (error) {
+        next(error);
     }
 }

@@ -20,7 +20,7 @@
     "compile": "gcc c_src/a_star.c -o dist/a_star && gcc c_src/knapsack.c -o dist/knapsack"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.8",
+    "@supabase/supabase-js": "^2.50.2",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

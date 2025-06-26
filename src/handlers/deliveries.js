@@ -38,16 +38,16 @@ export const suggestDeliveryRoute = (source, destination) => {
 
                 // Removes the optimized path header
                 console.log(lines, "\nLine: \n", lines[pathLine]);
-                const path = lines[pathLine] 
+                const path = lines[pathLine]
                     .split(' -> ')
                     .map(city => city.trim());
 
                 resolve({
                     path,
-                    route: routeLines 
+                    route: routeLines
                 });
             } catch (err) {
-                reject(`Failed to load a* output: ` + err)
+                reject(`Failed to load a* output: ${err}`);
             }
         })
 
@@ -63,12 +63,41 @@ export const suggestDeliveryRoute = (source, destination) => {
  * @param items: Array of object
  * [
  * {
- * id: number,
- * weight: number
+ *      id: number,
+ *      weight: number,
+ *      value: number
  * }
  * ]
  *
  * @todo add filtering on items that are approaching deadline
  */
 export const getKnapsackSolution = (capacity, items) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const args = [capacity.toString(), items.length.toString()];
+            for (const item of items) {
+                args.push(item.id.toString(), item.weight.toString(), item.value.toString());
+            }
+            const knapsackProcess = spawn(knapsack_file_path, args);
+
+            knapsackProcess.stdout.on('data', (data) => {
+                resolve(data.toString().trim());
+            })
+
+            knapsackProcess.stderr.on('data', (data) => {
+                reject('Invalid program usage');
+                console.error(data);
+            })
+
+            knapsackProcess.on('close', (code) => {
+                if (code !== 0) {
+                    reject('Program returned error code');
+                    return;
+                }
+            })
+
+        } catch (err) {
+            reject(`Failed to load knapsack solution: ${err}`)
+        }
+    })
 }
