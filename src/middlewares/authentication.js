@@ -1,26 +1,26 @@
-import { AccountType } from "../models/users";
+import { AccountType } from "../models/users.js";
 /**
  * Checks if the account is authenticated
  */
-export const isAuthenticated = (_, res, next) => {
-    if (express.session.isLoggedIn === true) {
-        next();
-    } else {
+export const isAuthenticated = (req, res, next) => {
+    if (!req.session || !req.session.isLoggedIn) {
         return res.status(401).json({ message: 'Not authenticated' });
     }
+    next();
 }
 
 /**
  * Checks if account is a management role
  * Note: Already performs authentication checking
  */
-export const isManagement = (_, res, next) => {
-    if (express.session.isLoggedIn === false) {
+export const isManagement = (req, res, next) => {
+    if (!req.session || !req.session.isLoggedIn) {
         return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    if (express.session.accountType === AccountType.MANAGEMENT) {
+    if (req.session.accountType === AccountType.MANAGEMENT) {
         next();
+        return;
     }
     return res.status(401).json({ message: 'Account does not have privileges to access this content' });
 }
@@ -28,13 +28,15 @@ export const isManagement = (_, res, next) => {
  * Checks if account is a delivery role
  * Note: Already performs authentication checking
  */
-export const isDelivery = (_, res, next) => {
-    if (express.session.isLoggedIn === false) {
+export const isDelivery = (req, res, next) => {
+    if (!req.session || !req.session.isLoggedIn) {
         return res.status(401).json({ message: 'Not authenticated' });
     }
+    console.log(req.session.accountType);
 
-    if (express.session.accountType === AccountType.DELIVERY) {
+    if (req.session.accountType === AccountType.DELIVERY) {
         next();
+        return;
     }
     return res.status(401).json({ message: 'Account does not have privileges to access this content' });
 }

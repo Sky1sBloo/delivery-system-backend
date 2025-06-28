@@ -5,7 +5,6 @@
 
 import bcrypt from 'bcrypt';
 import supabase from '../database.js';
-import express from 'express';
 
 /**
  * Registers the user
@@ -44,16 +43,16 @@ export const registerUser = async (req, res, next) => {
         const {error} = await supabase.from('users').insert({
             username: username,
             password: hashedPassword,
-            account_type: accountType
+            accountType: accountType
         });
 
 
         if (error != null) {
             throw new Error(error);
         }
-        express.session.isLoggedIn = true;
-        express.session.username = username;
-        express.session.accountType = express;
+        req.session.isLoggedIn = true;
+        req.session.username = username;
+        req.session.accountType = accountType;
         return res.status(201).json({ message: `Successfully registered user ${username}` });
     } catch (error) {
         next(error);
@@ -91,9 +90,9 @@ export const loginUser = async (req, res, next) => {
         if (!passwordMatch) {
             return res.status(401).json({ message: 'Wrong username or password' });
         }
-        express.session.username = username;
-        express.session.account_type = user.account_type;
-        express.session.isLoggedIn = true;
+        req.session.username = username;
+        req.session.accountType = user.account_type;
+        req.session.isLoggedIn = true;
 
         return res.status(200).json({ message: 'Logged in' });
     } catch (error) {
@@ -104,10 +103,10 @@ export const loginUser = async (req, res, next) => {
 /**
  * Logs out the user
  */
-export const logoutUser = async (_, res) => {
-    express.session.isLoggedIn = false;
-    express.session.username = '';
-    express.session.account_type = '';
+export const logoutUser = async (req, res) => {
+    req.session.isLoggedIn = false;
+    req.session.username = null;
+    req.session.accountType = null;
 
     return res.status(200).send();
 }
