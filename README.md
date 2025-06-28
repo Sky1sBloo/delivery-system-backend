@@ -69,7 +69,8 @@ PUT /api/delivery/${delivery_id}
   "destination": 5,
   "date_shipped": "2025-06-27",
   "deadline": "2025-06-29T18:00:00.000Z",
-  "status": "pending"
+  "status": "pending",
+  "value": 1
 }
 ```
 
