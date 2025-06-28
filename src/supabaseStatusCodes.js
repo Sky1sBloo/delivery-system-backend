@@ -1,0 +1,38 @@
+const supabaseStatusCode = {
+    NoSuchBucket: 404,
+    NoSuchKey: 404,
+    NoSuchUpload: 404,
+    InvalidJWT: 401,
+    InvalidRequest: 400,
+    TenantNotFound: 404,
+    EntityTooLarge: 413,
+    InternalError: 500,
+    ResourceAlreadyExists: 409,
+    InvalidBucketName: 400,
+    InvalidKey: 400,
+    InvalidRange: 416,
+    InvalidMimeType: 400,
+    InvalidUploadId: 400,
+    KeyAlreadyExists: 409,
+    BucketAlreadyExists: 409,
+    DatabaseTimeout: 504,
+    InvalidSignature: 403,
+    SignatureDoesNotMatch: 403,
+    AccessDenied: 403,
+    ResourceLocked: 423,
+    DatabaseError: 500,
+    MissingContentLength: 411,
+    MissingParameter: 400,
+    InvalidUploadSignature: 403,
+    LockTimeout: 423,
+    S3Error: -1,
+    S3InvalidAccessKeyId: 403,
+    S3MaximumCredentialsLimit: 400,
+    InvalidChecksum: 400,
+    MissingPart: 400,
+    SlowDown: 503,
+};
+
+export const getStatusCode = (code) => {
+    return supabaseStatusCode[code] ?? 500;
+};

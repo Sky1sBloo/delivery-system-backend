@@ -7,11 +7,35 @@ import { getKnapsackSolution, suggestDeliveryRoute } from '../handlers/deliverie
  */
 export const retrieveDeliveries = async (_, res, next) => {
     try {
-        const { data, error } = supabase.from('delivery').select();
+        const { data, error } = await supabase.from('delivery').select();
         if (error) {
             throw new Error(error.message);
         }
         return res.status(200).send(data);
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * @param req.session
+ * {
+ *  username
+ *  accountType
+ * }
+ */
+export const retrieveOwnedDeliveries = async (req, res, next) => {
+    try {
+        const username = req.session.username;
+        if (username === undefined) {
+            throw new Error('Username is undefined');
+        }
+        const { data, error } = await supabase.from('delivery').select().eq('assigned_delivery', username);
+        if (error) {
+            throw new Error(error.message);
+        }
+        return res.status(200).send(data);
+
     } catch (error) {
         next(error);
     }
@@ -55,6 +79,7 @@ export const addDelivery = async (req, res, next) => {
  * @param req.body
  * {
  *      product_name: string,
+ *      assigned_delivery: string,
  *      sender: string,
  *      recipient: string,
  *      destination: string,
@@ -68,16 +93,13 @@ export const addDelivery = async (req, res, next) => {
  * id: number
  */
 export const editDeliveryInfo = async (req, res, next) => {
-    try {
-        const { error } = await supabase.from('delivery').update(req.body).eq('id', req.params.id);
-        if (error) {
-            throw new Error(error);
-        }
-
-        return res.status(200).json({ message: 'Updated delivery' });
-    } catch (error) {
+    const { error } = await supabase.from('delivery').update(req.body).eq('id', req.params.id);
+    if (error) {
         next(error);
+        return;
     }
+
+    return res.status(200).json({ message: 'Updated delivery' });
 }
 /**
  * Deletes an existing delivery
@@ -87,19 +109,16 @@ export const editDeliveryInfo = async (req, res, next) => {
  * }
  */
 export const deleteDelivery = async (req, res, next) => {
-    try {
-        if (req.body.id == undefined) {
-            return res.status(400).json({ message: 'Missing body param: id' });
-        }
-        const { error } = await supabase.from('delivery').delete().eq(req.body.id);
-        if (error) {
-            throw new Error(error);
-        }
-
-        return res.status(200).json({ message: 'Deleted delivery' });
-    } catch (error) {
-        next(error);
+    if (req.body.id == undefined) {
+        return res.status(400).json({ message: 'Missing body param: id' });
     }
+    const { error } = await supabase.from('delivery').delete().eq(req.body.id);
+    if (error) {
+        next(error);
+        return;
+    }
+
+    return res.status(200).json({ message: 'Deleted delivery' });
 }
 
 /**
