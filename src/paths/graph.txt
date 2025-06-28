@@ -1,4 +1,42 @@
-0 1 1.0
-0 2 2.0
-1 2 2.5
-2 3 1.0
+0 1 50.0 TPLEX
+1 2 30.0 TPLEX
+2 3 40.0 TPLEX
+3 4 80.0 MarcosHighway
+4 5 60.0 NLEX
+5 6 25.0 MacArthur
+6 7 20.0 MacArthur
+7 8 35.0 NLEX
+8 9 15.0 NLEX
+9 10 12.0 Skyway
+10 18 8.0 NLEX
+18 19 5.0 Skyway
+19 20 5.0 EDSA
+20 21 4.0 RoxasBlvd
+21 22 4.0 C5
+22 23 6.0 C5
+23 24 8.0 SLEX
+24 25 25.0 Cavitex
+25 26 10.0 Cavitex
+26 27 12.0 AguinaldoHighway
+27 28 8.0 AguinaldoHighway
+28 29 35.0 CALAX
+29 30 20.0 CALAX
+30 31 15.0 CALAX
+31 32 40.0 SLEX
+32 33 10.0 QuezonProvincialRoad
+33 12 10.0 QuezonProvincialRoad
+10 13 10.0 MarcosHighway
+13 14 12.0 MarcosHighway
+10 16 20.0 NLEX
+16 37 10.0 NLEX
+37 38 15.0 NLEX
+38 39 10.0 NLEX
+9 40 80.0 SCTEX
+40 41 15.0 SCTEX
+41 15 25.0 SCTEX
+6 44 90.0 PangasinanRoad
+44 45 25.0 PangasinanRoad
+45 46 80.0 IlocosHighway
+46 47 60.0 IlocosHighway
+47 48 100.0 CagayanRoad
+2 49 85.0 NuevaVizcayaRoad

@@ -1,5 +1,5 @@
 import supabase from '../database.js';
-import { suggestDeliveryRoute } from '../handlers/deliveries.js';
+import { getKnapsackSolution, suggestDeliveryRoute } from '../handlers/deliveries.js';
 
 
 /**
@@ -7,11 +7,35 @@ import { suggestDeliveryRoute } from '../handlers/deliveries.js';
  */
 export const retrieveDeliveries = async (_, res, next) => {
     try {
-        const { data, error } = supabase.from('delivery').select();
+        const { data, error } = await supabase.from('delivery').select();
         if (error) {
             throw new Error(error.message);
         }
         return res.status(200).send(data);
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * @param req.session
+ * {
+ *  username
+ *  accountType
+ * }
+ */
+export const retrieveOwnedDeliveries = async (req, res, next) => {
+    try {
+        const username = req.session.username;
+        if (username === undefined) {
+            throw new Error('Username is undefined');
+        }
+        const { data, error } = await supabase.from('delivery').select().eq('assigned_delivery', username);
+        if (error) {
+            throw new Error(error.message);
+        }
+        return res.status(200).send(data);
+
     } catch (error) {
         next(error);
     }
@@ -24,8 +48,8 @@ export const retrieveDeliveries = async (_, res, next) => {
  *      product_name: string,
  *      sender: string,
  *      recipient: string,
- *      destination: string,
- *      source: string,
+ *      destination: number,
+ *      source: number,
  *      date_shipped: date,
  *      deadline: timestamp,
  *      status: delivery_status
@@ -39,7 +63,7 @@ export const addDelivery = async (req, res, next) => {
                 return res.status(400).json({ message: 'Missing body parameters' });
             }
         }
-        const { error } = supabase.from('delivery').insert(req.body);
+        const { error } = await supabase.from('delivery').insert(req.body).select();
         if (error) {
             throw new Error(error);
         }
@@ -55,6 +79,7 @@ export const addDelivery = async (req, res, next) => {
  * @param req.body
  * {
  *      product_name: string,
+ *      assigned_delivery: string,
  *      sender: string,
  *      recipient: string,
  *      destination: string,
@@ -68,16 +93,13 @@ export const addDelivery = async (req, res, next) => {
  * id: number
  */
 export const editDeliveryInfo = async (req, res, next) => {
-    try {
-        const { error } = await supabase.from('delivery').update(req.body).eq('id', req.params.id);
-        if (error) {
-            throw new Error(error);
-        }
-
-        return res.status(200).json({ message: 'Updated delivery' });
-    } catch (error) {
+    const { error } = await supabase.from('delivery').update(req.body).eq('id', req.params.id);
+    if (error) {
         next(error);
+        return;
     }
+
+    return res.status(200).json({ message: 'Updated delivery' });
 }
 /**
  * Deletes an existing delivery
@@ -87,19 +109,16 @@ export const editDeliveryInfo = async (req, res, next) => {
  * }
  */
 export const deleteDelivery = async (req, res, next) => {
-    try {
-        if (req.body.id == undefined) {
-            return res.status(400).json({ message: 'Missing body param: id' });
-        }
-        const { error } = await supabase.from('delivery').delete().eq(req.body.id);
-        if (error) {
-            throw new Error(error);
-        }
-
-        return res.status(200).json({ message: 'Deleted delivery' });
-    } catch (error) {
-        next(error);
+    if (req.body.id == undefined) {
+        return res.status(400).json({ message: 'Missing body param: id' });
     }
+    const { error } = await supabase.from('delivery').delete().eq(req.body.id);
+    if (error) {
+        next(error);
+        return;
+    }
+
+    return res.status(200).json({ message: 'Deleted delivery' });
 }
 
 /**
@@ -111,15 +130,51 @@ export const deleteDelivery = async (req, res, next) => {
  *      destination: number
  * }
  */
-export const getDeliveryRoute = async (req, res) => {
+export const getDeliveryRoute = async (req, res, next) => {
     if (!req.body || !req.body.source || !req.body.destination) {
         return res.status(400).json({ message: 'Missing source/destination' });
     }
 
     try {
         const suggestedPath = await suggestDeliveryRoute(req.body.source, req.body.destination);
-        return res.status(200).json({ path: suggestedPath });
+        return res.status(200).json(suggestedPath);
     } catch (error) {
-        return res.status(400).json({ message: error.toString() })
+        next(error);
+    }
+}
+
+/**
+ * Suggests the items fit for the truck
+ * @param req.body
+ * {
+ *      source: number,
+ *      destination: number,
+ *      capacity: number
+ * }
+ */
+export const suggestDeliveryItems = async (req, res, next) => {
+    const { source, destination, capacity } = req.body;
+
+    if (source === undefined || destination === undefined || capacity === undefined) {
+        return res.status(400).json({ message: 'Missing required body params' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('delivery')
+            .select()
+            .eq('destination', req.body.destination)
+            .eq('source', req.body.source);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        const items = await getKnapsackSolution(capacity, data);
+
+        return res.status(200).json(items);
+
+    } catch (error) {
+        next(error);
     }
 }

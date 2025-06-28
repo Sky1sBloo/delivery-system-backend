@@ -4,7 +4,7 @@
  */
 
 import bcrypt from 'bcrypt';
-import supabase from '../username_database.js';
+import supabase from '../database.js';
 
 /**
  * Registers the user
@@ -16,7 +16,7 @@ import supabase from '../username_database.js';
  *   accountType: 'management' || 'delivery'
  * }
  */
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
     try {
         const username = req.body.username;
         const password = req.body.password;
@@ -26,11 +26,11 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        if (userType !== 'management' && userType !== 'delivery') {
+        if (accountType !== 'management' && accountType !== 'delivery') {
             return res.status(400).json({ message: 'Invalid user type' });
         }
 
-        const usernameSQL = await supabase.from('users').select('id').eq('username', username);
+        const usernameSQL = await supabase.from('users').select('username').eq('username', username);
         if (usernameSQL.data == null || usernameSQL.error != null) {
             throw new Error(usernameSQL.error.message);
         }
@@ -40,18 +40,19 @@ export const registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const insertSQL = await supabase.from('users').insert({
+        const {error} = await supabase.from('users').insert({
             username: username,
             password: hashedPassword,
-            account_type: accountType
-        }).select('id');
+            accountType: accountType
+        });
 
-        if (insertSQL.error != null) {
-            throw new Error(insertSQL.error);
+
+        if (error != null) {
+            throw new Error(error);
         }
-        express.session.isLoggedIn = true;
-        express.session.username = username;
-        express.session.accountType = express;
+        req.session.isLoggedIn = true;
+        req.session.username = username;
+        req.session.accountType = accountType;
         return res.status(201).json({ message: `Successfully registered user ${username}` });
     } catch (error) {
         next(error);
@@ -67,7 +68,7 @@ export const registerUser = async (req, res) => {
  *   password: string,
  * }
  */
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
     try {
         const username = req.body.username;
         const password = req.body.password;
@@ -76,7 +77,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        const { data, error } = await supabase.from('users').select('id, password, account_type').eq('username', username);
+        const { data, error } = await supabase.from('users').select('password, account_type').eq('username', username);
         if (error) {
             throw new Error(error.message);
         }
@@ -89,11 +90,11 @@ export const loginUser = async (req, res) => {
         if (!passwordMatch) {
             return res.status(401).json({ message: 'Wrong username or password' });
         }
-        express.session.username = username;
-        express.session.account_type = user.account_type;
-        express.session.isLoggedIn = true;
+        req.session.username = username;
+        req.session.accountType = user.account_type;
+        req.session.isLoggedIn = true;
 
-        return res.status(200).json({message: 'Logged in'});
+        return res.status(200).json({ message: 'Logged in' });
     } catch (error) {
         next(error);
     }
@@ -102,10 +103,10 @@ export const loginUser = async (req, res) => {
 /**
  * Logs out the user
  */
-export const logoutUser = async (_, res) => {
-    express.session.isLoggedIn = false;
-    express.session.username = '';
-    express.session.account_type = '';
+export const logoutUser = async (req, res) => {
+    req.session.isLoggedIn = false;
+    req.session.username = null;
+    req.session.accountType = null;
 
     return res.status(200).send();
 }
