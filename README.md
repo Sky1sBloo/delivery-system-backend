@@ -42,7 +42,7 @@ npm run dev
 | PUT    | `/api/delivery/:id`          | Edit an existing delivery *(management)*       |
 | DELETE | `/api/delivery/:id`          | Delete a delivery *(management)*               |
 | GET    | `/api/delivery/route`        | Suggest route between source and destination *(delivery)* |
-| GET    | `/api/delivery/items`        | Suggest items to deliver based on knapsack *(management) |
+| GET    | `/api/delivery/items`        | Suggest items to deliver based on knapsack *(management)* |
 
 ## Example Usage
 
