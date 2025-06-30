@@ -43,12 +43,13 @@ export const registerUser = async (req, res, next) => {
         const {error} = await supabase.from('users').insert({
             username: username,
             password: hashedPassword,
-            accountType: accountType
+            account_type: accountType
         });
 
 
         if (error != null) {
-            throw new Error(error);
+            console.log(error);
+            throw new Error(error.message);
         }
         req.session.isLoggedIn = true;
         req.session.username = username;
