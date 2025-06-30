@@ -28,9 +28,11 @@ npm run dev
 
 | Method | Endpoint         | Description          |
 |--------|------------------|----------------------|
-| POST   | `/api/user/register` | Register new user (management/delivery) |
+| POST   | `/api/user/register` | Register new user *(management/delivery)* |
 | POST   | `/api/user/login`    | Login existing user |
 | POST   | `/api/user/logout`   | Logout the session  |
+| GET    | `/api/user`          | Gets info of current user |
+| GET    | `/api/user/delivery` | Gets all delivery users *(management)* |
 
 ### Delivery Routes
 

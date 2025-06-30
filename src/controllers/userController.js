@@ -40,7 +40,7 @@ export const registerUser = async (req, res, next) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const {error} = await supabase.from('users').insert({
+        const { error } = await supabase.from('users').insert({
             username: username,
             password: hashedPassword,
             account_type: accountType
@@ -104,10 +104,37 @@ export const loginUser = async (req, res, next) => {
 /**
  * Logs out the user
  */
-export const logoutUser = async (req, res) => {
+export const logoutUser = (req, res) => {
     req.session.isLoggedIn = false;
     req.session.username = null;
     req.session.accountType = null;
 
     return res.status(200).send();
+}
+
+/**
+ * Gets the user info of current logged in user
+ */
+export const getUserInfo = (req, res) => {
+    const userInfo = {
+        username: req.session.username,
+        accountType: req.session.accountType
+    };
+    return res.status(200).json(userInfo);
+}
+
+export const getDeliveryUsers = async (_, res, next) => {
+    const { data, error } = await supabase.from('users').select('username, account_type');
+
+    if (error) {
+        next(error.message);
+    }
+
+    const accounts = data.map(({ username, account_type }) => ({
+        username,
+        accountType: account_type
+    }));
+
+
+    res.status(200).json(accounts);
 }
