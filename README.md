@@ -44,7 +44,7 @@ npm run dev
 | PUT    | `/api/delivery/:id`          | Edit an existing delivery *(management)*       |
 | DELETE | `/api/delivery/:id`          | Delete a delivery *(management)*               |
 | GET    | `/api/delivery/route`        | Suggest route between source and destination *(delivery)* |
-| GET    | `/api/delivery/items`        | Suggest items to deliver based on knapsack *(management) |
+| GET    | `/api/delivery/items`        | Suggest items to deliver based on knapsack *(management)* |
 
 ## Example Usage
 
@@ -71,7 +71,8 @@ PUT /api/delivery/${delivery_id}
   "destination": 5,
   "date_shipped": "2025-06-27",
   "deadline": "2025-06-29T18:00:00.000Z",
-  "status": "pending"
+  "status": "pending",
+  "value": 1
 }
 ```
 
