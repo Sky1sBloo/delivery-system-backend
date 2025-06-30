@@ -124,7 +124,7 @@ export const getUserInfo = (req, res) => {
 }
 
 export const getDeliveryUsers = async (_, res, next) => {
-    const { data, error } = await supabase.from('users').select('username, account_type');
+    const { data, error } = await supabase.from('users').select('username, account_type').eq('account_type', 'delivery');
 
     if (error) {
         next(error.message);
