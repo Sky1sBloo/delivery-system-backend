@@ -11,7 +11,12 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        callback(null, origin);
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use(session({
     secret: process.env.SESSION_SECRET || 'forgot ur .env file',
