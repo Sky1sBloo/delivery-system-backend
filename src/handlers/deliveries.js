@@ -64,8 +64,7 @@ export const suggestDeliveryRoute = (source, destination) => {
  * [
  * {
  *      id: number,
- *      weight: number,
- *      value: number
+ *      weight: number
  * }
  * ]
  *
@@ -76,7 +75,7 @@ export const getKnapsackSolution = (capacity, items) => {
         try {
             const args = [capacity.toString(), items.length.toString()];
             for (const item of items) {
-                args.push(item.id.toString(), item.weight.toString(), item.value.toString());
+                args.push(item.id.toString(), item.weight.toString(), calculatePriority(item).toString());
             }
             const knapsackProcess = spawn(knapsack_file_path, args);
 
@@ -100,4 +99,63 @@ export const getKnapsackSolution = (capacity, items) => {
             reject(`Failed to load knapsack solution: ${err}`)
         }
     })
+}
+
+/**
+ * Generates the priority of the delivery
+ * @param product
+ * {
+ *      product_name: string,
+ *      assigned_delivery: string,
+ *      sender: string,
+ *      recipient: string,
+ *      destination: string,
+ *      source: string,
+ *      date_shipped: date,
+ *      deadline: timestamp,
+ *      status: delivery_status
+ * }
+ *
+ * @returns score (0 - 80)
+ */
+const calculatePriority = (product) => {
+    const now = Date.now();
+    const deadline = product.deadline;
+    const shipped = product.shipped;
+
+    const daysToDeadline = (deadline - now) / (1000 * 60 * 60 * 24);
+    const daysSinceShipped = (now - shipped) / (1000 * 60 * 60 * 24);
+
+    let deadlineScore = 0;
+    switch (true) {
+        case daysToDeadline < 1:
+            deadlineScore = 50;
+            break;
+        case daysToDeadline < 2:
+            deadlineScore = 40;
+            break;
+        case daysToDeadline < 3:
+            deadlineScore = 30;
+            break;
+        default:
+            deadlineScore = 10;
+    }
+
+    let delayScore = 0;
+    switch (true) {
+        case daysSinceShipped > 3:
+            delayScore = 30;
+            break;
+        case daysSinceShipped > 2:
+            delayScore = 20;
+            break;
+        case daysSinceShipped > 1:
+            delayScore = 10;
+            break;
+        default:
+            delayScore = 0;
+    }
+
+    const totalScore = deadlineScore + delayScore;
+    return totalScore; 
 }
