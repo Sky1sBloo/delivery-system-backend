@@ -131,7 +131,7 @@ export const deleteDelivery = async (req, res, next) => {
  * }
  */
 export const getDeliveryRoute = async (req, res, next) => {
-    if (!req.body || !req.body.source || !req.body.destination) {
+    if (!req.body || req.body.source === undefined || req.body.destination === undefined) {
         return res.status(400).json({ message: 'Missing source/destination' });
     }
 
