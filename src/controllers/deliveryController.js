@@ -18,6 +18,24 @@ export const retrieveDeliveries = async (_, res, next) => {
 }
 
 /**
+ * Retrieve specific delivery by id
+ */
+export const retrieveDeliveriesById = async (req, res, next) => {
+    if (!req.params || req.params.id === undefined) {
+        return res.status(400).json({ message: 'Missing params id' });
+    }
+    try {
+        const { data, error } = await supabase.from('delivery').select().eq('id', req.params.id);
+        if (error) {
+            throw new Error(error.message);
+        }
+        return res.status(200).send(data[0]);
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
  * @param req.session
  * {
  *  username
@@ -65,7 +83,7 @@ export const addDelivery = async (req, res, next) => {
         }
         const { error } = await supabase.from('delivery').insert(req.body).select();
         if (error) {
-            throw new Error(error);
+            throw new Error(error.message);
         }
 
         return res.status(201).json({ message: 'Created new delivery' });
@@ -103,16 +121,16 @@ export const editDeliveryInfo = async (req, res, next) => {
 }
 /**
  * Deletes an existing delivery
- * @param req.body
+ * @param req.param
  * {
  *      id: number,
  * }
  */
 export const deleteDelivery = async (req, res, next) => {
-    if (req.body.id == undefined) {
+    if (!req.params || req.params.id == undefined) {
         return res.status(400).json({ message: 'Missing body param: id' });
     }
-    const { error } = await supabase.from('delivery').delete().eq(req.body.id);
+    const { error } = await supabase.from('delivery').delete().eq('id', req.params.id);
     if (error) {
         next(error);
         return;
