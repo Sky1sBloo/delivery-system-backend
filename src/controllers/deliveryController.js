@@ -164,7 +164,8 @@ export const suggestDeliveryItems = async (req, res, next) => {
             .from('delivery')
             .select()
             .eq('destination', req.body.destination)
-            .eq('source', req.body.source);
+            .eq('source', req.body.source)
+            .eq('status', 'pending');
 
         if (error) {
             throw new Error(error.message);
