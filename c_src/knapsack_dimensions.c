@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 
     // output selected item ids
     if (count == 0) {
-        printf("no items selected\n");
+        return 0;
     } else {
         for (int i = count - 1; i >= 0; --i) {
             printf("%d", selected_ids[i]);
