@@ -142,19 +142,19 @@ export const deleteDelivery = async (req, res, next) => {
 /**
  * Suggests a delivery route and returns its recommended path
  *
- * @param req.body
+ * @param req.query
  * {
  *      source: number,
  *      destination: number
  * }
  */
 export const getDeliveryRoute = async (req, res, next) => {
-    if (!req.body || req.body.source === undefined || req.body.destination === undefined) {
+    if (!req.query || req.query.source === undefined || req.query.destination === undefined) {
         return res.status(400).json({ message: 'Missing source/destination' });
     }
 
     try {
-        const suggestedPath = await suggestDeliveryRoute(req.body.source, req.body.destination);
+        const suggestedPath = await suggestDeliveryRoute(req.query.source, req.query.destination);
         return res.status(200).json(suggestedPath);
     } catch (error) {
         next(error);
@@ -163,7 +163,7 @@ export const getDeliveryRoute = async (req, res, next) => {
 
 /**
  * Suggests the items fit for the truck
- * @param req.body
+ * @param req.query
  * {
  *      source: number,
  *      destination: number,
@@ -171,18 +171,21 @@ export const getDeliveryRoute = async (req, res, next) => {
  * }
  */
 export const suggestDeliveryItems = async (req, res, next) => {
-    const { source, destination, capacity } = req.body;
+    if (!req.query) {
+        return res.status(400).json({ message: "Missing query" });
+    }
+    const { source, destination, capacity } = req.query;
 
     if (source === undefined || destination === undefined || capacity === undefined) {
-        return res.status(400).json({ message: 'Missing required body params' });
+        return res.status(400).json({ message: 'Missing required query' });
     }
 
     try {
         const { data, error } = await supabase
             .from('delivery')
             .select()
-            .eq('destination', req.body.destination)
-            .eq('source', req.body.source)
+            .eq('destination', destination)
+            .eq('source', source)
             .eq('status', 'pending');
 
         if (error) {
