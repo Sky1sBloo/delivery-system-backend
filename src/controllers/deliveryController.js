@@ -193,8 +193,11 @@ export const suggestDeliveryItems = async (req, res, next) => {
         }
 
         const items = await getKnapsackSolution(capacity, data);
-
-        return res.status(200).json(items);
+        const ids =items 
+            .trim()
+            .split(/\s+/)  // supports multiple spaces or newlines
+            .map(Number);  // convert to integers
+        return res.status(200).json(ids);
 
     } catch (error) {
         next(error);
