@@ -70,7 +70,9 @@ export const retrieveOwnedDeliveries = async (req, res, next) => {
  *      source: number,
  *      date_shipped: date,
  *      deadline: timestamp,
- *      status: delivery_status
+ *      status: delivery_status,
+ *      weight: number,
+ *      volume: number
  * }
  */
 export const addDelivery = async (req, res, next) => {
@@ -104,7 +106,9 @@ export const addDelivery = async (req, res, next) => {
  *      source: string,
  *      date_shipped: date,
  *      deadline: timestamp,
- *      status: delivery_status
+ *      status: delivery_status,
+ *      weight: number,
+ *      volume: number
  * }
  *
  * @param req.params
@@ -167,6 +171,7 @@ export const getDeliveryRoute = async (req, res, next) => {
  * {
  *      source: number,
  *      destination: number,
+ *      volume: number,
  *      capacity: number
  * }
  */
@@ -174,9 +179,9 @@ export const suggestDeliveryItems = async (req, res, next) => {
     if (!req.query) {
         return res.status(400).json({ message: "Missing query" });
     }
-    const { source, destination, capacity } = req.query;
+    const { source, destination, volume, capacity } = req.query;
 
-    if (source === undefined || destination === undefined || capacity === undefined) {
+    if (source === undefined || destination === undefined || capacity === undefined || volume === undefined) {
         return res.status(400).json({ message: 'Missing required query' });
     }
 
@@ -192,8 +197,8 @@ export const suggestDeliveryItems = async (req, res, next) => {
             throw new Error(error.message);
         }
 
-        const items = await getKnapsackSolution(capacity, data);
-        const ids =items 
+        const items = await getKnapsackSolution(capacity, data, volume);
+        const ids = items
             .trim()
             .split(/\s+/)  // supports multiple spaces or newlines
             .map(Number);  // convert to integers

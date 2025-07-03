@@ -17,7 +17,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "compile": "gcc c_src/a_star.c -o dist/a_star && gcc c_src/knapsack.c -o dist/knapsack"
+    "compile": "gcc c_src/a_star.c -o dist/a_star && gcc c_src/knapsack_dimensions.c -o dist/knapsack"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.2",

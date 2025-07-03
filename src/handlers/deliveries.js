@@ -80,18 +80,19 @@ export const suggestDeliveryRoute = (source, destination) => {
  * [
  * {
  *      id: number,
- *      weight: number
+ *      capacity: number,
+ *      volume: number,
  * }
  * ]
  *
  * @todo add filtering on items that are approaching deadline
  */
-export const getKnapsackSolution = (capacity, items) => {
+export const getKnapsackSolution = (capacity, items, volume) => {
     return new Promise((resolve, reject) => {
         try {
-            const args = [capacity.toString(), items.length.toString()];
+            const args = [capacity.toString(), volume.toString(), items.length.toString()];
             for (const item of items) {
-                args.push(item.id.toString(), item.weight.toString(), calculatePriority(item).toString());
+                args.push(item.id.toString(), item.weight.toString(), item.volume.toString(), calculatePriority(item).toString());
             }
             const knapsackProcess = spawn(knapsack_file_path, args);
 
@@ -129,6 +130,8 @@ export const getKnapsackSolution = (capacity, items) => {
  *      source: string,
  *      date_shipped: date,
  *      deadline: timestamp,
+ *      weight: number,
+ *      volume: number
  *      status: delivery_status
  * }
  *
