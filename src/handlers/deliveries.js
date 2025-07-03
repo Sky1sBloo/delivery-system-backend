@@ -8,6 +8,22 @@ const graph_file = './src/paths/graph.txt'
 const heuristic_file = './src/paths/heuristic.txt'
 const city_mapping_file = './src/paths/city_mapping.txt'
 
+function parseRouteString(routeStr) {
+    const regex = /^(.+?) -> (.+?) via (.+?) \(([\d.]+) km\)$/;
+    const match = routeStr.match(regex);
+
+    if (!match) {
+        throw new Error("Invalid route format");
+    }
+
+    const [, source, destination, roadName, distanceStr] = match;
+    return {
+        source,
+        destination,
+        roadName,
+        distance: parseFloat(distanceStr)
+    };
+}
 /*
  * Suggests a delivery route
  * @param source: integer Node representing the source 
@@ -36,15 +52,15 @@ export const suggestDeliveryRoute = (source, destination) => {
 
                 const routeLines = lines.filter(line => line.includes('via'));
 
-                // Removes the optimized path header
-                console.log(lines, "\nLine: \n", lines[pathLine]);
                 const path = lines[pathLine]
                     .split(' -> ')
                     .map(city => city.trim());
 
+                const parsedRoutes = routeLines.map((line) => parseRouteString(line));
+
                 resolve({
                     path,
-                    route: routeLines
+                    route: parsedRoutes 
                 });
             } catch (err) {
                 reject(`Failed to load a* output: ${err}`);
@@ -157,5 +173,5 @@ const calculatePriority = (product) => {
     }
 
     const totalScore = deadlineScore + delayScore;
-    return totalScore; 
+    return totalScore;
 }
