@@ -32,7 +32,6 @@ export const isDelivery = (req, res, next) => {
     if (!req.session || !req.session.isLoggedIn) {
         return res.status(401).json({ message: 'Not authenticated' });
     }
-    console.log(req.session.accountType);
 
     if (req.session.accountType === AccountType.DELIVERY) {
         next();

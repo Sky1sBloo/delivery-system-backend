@@ -6,11 +6,11 @@ const router = Router();
 
 router.get('/all', isManagement, retrieveDeliveries);
 router.get('/', isDelivery, retrieveOwnedDeliveries);
+router.get('/route', isDelivery, getDeliveryRoute);
 router.get('/:id', isManagement, retrieveDeliveriesById);
 router.post('/', isManagement, addDelivery);
 router.put('/:id', isManagement, editDeliveryInfo);
 router.delete('/:id', isManagement, deleteDelivery);
-router.get('/route', isDelivery, getDeliveryRoute);
 router.get('/items', isManagement, suggestDeliveryItems);
 
 export default router;
