@@ -130,8 +130,8 @@ export const getKnapsackSolution = (capacity, items, volume) => {
  *      source: string,
  *      date_shipped: date,
  *      deadline: timestamp,
- *      weight: number,
- *      volume: number
+ *      weight: number,  // in kg 
+ *      volume: number  // in cubic meters
  *      status: delivery_status
  * }
  *
