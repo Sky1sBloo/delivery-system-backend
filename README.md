@@ -103,6 +103,8 @@ GET /api/delivery/items
 ```
 
 ## Contributors
-[Sky1sBloo](https://github.com/Sky1sBloo)
-[Nick Baptista](https://github.com/nckkrw)
-[082131](https://github.com/082131)
+- [082131](https://github.com/082131)
+- [Nick Baptista](https://github.com/nckkrw)
+- [Sky1sBloo](https://github.com/Sky1sBloo)
+- [Clarisse Jem Salazar](https://github.com/jemslzr)
+- [Arian Joy Delos Reyes](https://github.com/Ajdsreyes)
