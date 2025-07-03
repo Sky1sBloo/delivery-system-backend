@@ -101,3 +101,8 @@ GET /api/delivery/items
   "volume": 10
 }
 ```
+
+## Contributors
+[Sky1sBloo](https://github.com/Sky1sBloo)
+[Nick Baptista](https://github.com/nckkrw)
+[082131](https://github.com/082131)
