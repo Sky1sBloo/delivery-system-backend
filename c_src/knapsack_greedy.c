@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-// Structure to store each item's attributes and value-to-weight ratio
+#define HUGE_RATIO 1e9
+// Structure to store each item's attributes and value-to-(weight+volume) ratio
 typedef struct {
     int id;
     int weight;
@@ -15,10 +15,20 @@ typedef struct {
 int compareItems(const void *a, const void *b) {
     Item *itemA = (Item*)a;
     Item *itemB = (Item*)b;
-    
-    if (itemA->ratio > itemB->ratio) return -1;  // A should come before B
-    if (itemA->ratio < itemB->ratio) return 1;   // B should come before A
-    return 0;  // Equal ratios
+
+    if (itemA->ratio > itemB->ratio) return -1;
+    if (itemA->ratio < itemB->ratio) return 1;
+
+    // Tie-breaker 1: higher value
+    if (itemA->value > itemB->value) return -1;
+    if (itemA->value < itemB->value) return 1;
+
+    // Tie-breaker 2: lower weight 
+    if (itemA->weight < itemB->weight) return -1;
+    if (itemA->weight > itemB->weight) return 1;
+
+    // Tie-breaker 3: lower ID
+    return itemA->id - itemB->id;
 }
 
 // Parses command-line arguments and populates the items array
@@ -44,22 +54,24 @@ int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *
         return 103;  // Memory allocation failure
     }
 
-    // Parse item fields and compute ratio
-    for (int i = 0; i < *num_items; i++) {
-        int base_idx = 4 + i * 4;
-        (*items)[i].id = atoi(argv[base_idx]);
-        (*items)[i].weight = atoi(argv[base_idx + 1]);
-        (*items)[i].volume = atoi(argv[base_idx + 2]);
-        (*items)[i].value = atoi(argv[base_idx + 3]);
+        // Parse item fields and compute ratio = value / (weight + volume)
+        for (int i = 0; i < *num_items; i++) {
+            int base_idx = 4 + i * 4;
+            
+            int id     = atoi(argv[base_idx]);
+            int weight = atoi(argv[base_idx + 1]);
+            int volume = atoi(argv[base_idx + 2]);
+            int value  = atoi(argv[base_idx + 3]);
 
-        // If weight is zero, assign a very high ratio (prefer it)
-        int denom = weight + volume;
-        if (denom > 0) {
-            (*items)[i].ratio = (double)value / denom;
-        } else {
-            (*items)[i].ratio = 1e9;  // Prefer items with 0 weight+volume
+            int denom = weight + volume;
+            double ratio = (denom > 0) ? (double)value / denom : HUGE_RATIO; // Prefer items with 0 weight+volume
+
+            (*items)[i].id     = id;
+            (*items)[i].weight = weight;
+            (*items)[i].volume = volume;
+            (*items)[i].value  = value;
+            (*items)[i].ratio  = ratio;
         }
-    }
 
     return 0;  // Success
 }
