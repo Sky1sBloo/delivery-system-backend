@@ -1,171 +1,139 @@
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-struct Item {
-  int id;
-  int weight;
-  int volume;
-  int value;
-};
+// Structure to store each item's attributes and value-to-weight ratio
+typedef struct {
+    int id;
+    int weight;
+    int volume;
+    int value;
+    double ratio;
+} Item;
 
-// Struct to store value, number of items used, and total ID sum for tiebreaking
-struct Cell {
-  int value;
-  int count;
-  int id_sum;
-};
-
-int compare_ids(const void *a, const void *b) {
-  return (*(int *)a - *(int *)b);
+// Comparison function for qsort - sorts in descending order by ratio
+int compareItems(const void *a, const void *b) {
+    Item *itemA = (Item*)a;
+    Item *itemB = (Item*)b;
+    
+    if (itemA->ratio > itemB->ratio) return -1;  // A should come before B
+    if (itemA->ratio < itemB->ratio) return 1;   // B should come before A
+    return 0;  // Equal ratios
 }
 
-// Ensure all item quadruplets (id, weight, volume, value) are present and parse
-// them
-struct Item *parse_items(int argc, char *argv[], int num_items) {
-  struct Item *items = malloc(num_items * sizeof(struct Item));
-  if (!items) {
-    fprintf(stderr, "Memory allocation failed.\n");
-    exit(1);
-  }
-  for (int i = 0; i < num_items; ++i) {
-    int base = 4 + i * 4;
-    items[i].id = atoi(argv[base]);
-    items[i].weight = atoi(argv[base + 1]);
-    items[i].volume = atoi(argv[base + 2]);
-    items[i].value = atoi(argv[base + 3]);
-  }
-  return items;
-}
+// Parses command-line arguments and populates the items array
+int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *num_items, Item **items) {
+    if (argc < 4) {
+        fprintf(stderr, "Error: Not enough arguments. Usage: <capacity> <max_volume> <num_items> <id1> <w1> <v1> <val1> ...\n");
+        return 101;  // Error code for insufficient base arguments
+    }
 
-/*
- * Fill the dynamic programming table.
- * For each item, we decide whether to include it or not based on:
- * - If weight and volume constraints allow it
- * - Taking the maximum of:
- *     a) Excluding the item (value remains from previous row)
- *     b) Including the item (value = previous value at reduced weight/volume +
- * item value) Tiebreaker rules:
- *         - Prefer fewer items (lower count)
- *         - If tied, prefer lower sum of item IDs (earlier items)
- */
-void fill_dp_table(int capacity, int max_volume, int num_items,
-                   struct Item *items, struct Cell ***dp_ptr) {
-  // Allocate DP table
-  struct Cell **dp = calloc(capacity + 1, sizeof(struct Cell *));
-  for (int w = 0; w <= capacity; ++w) {
-    dp[w] = calloc(max_volume + 1, sizeof(struct Cell));
-  }
+    *capacity = atoi(argv[1]);
+    *max_volume = atoi(argv[2]);
+    *num_items = atoi(argv[3]);
 
-  // Process each item
-  for (int item_idx = 0; item_idx < num_items; ++item_idx) {
-    int wt = items[item_idx].weight;
-    int vol = items[item_idx].volume;
-    int val = items[item_idx].value;
-    int id = items[item_idx].id;
+    int expected_args = 4 + (*num_items * 4);
+    if (argc != expected_args) {
+        fprintf(stderr, "Error: Expected %d arguments, got %d\n", expected_args, argc);
+        return 102;  // Error code for incorrect total number of arguments
+    }
 
-    // Reverse iteration for 0/1 knapsack
-    for (int w = capacity; w >= wt; --w) {
-      for (int v = max_volume; v >= vol; --v) {
-        struct Cell prev = dp[w - wt][v - vol];
-        struct Cell curr = dp[w][v];
-        struct Cell take = {.value = prev.value + val,
-                            .count = prev.count + 1,
-                            .id_sum = prev.id_sum + id};
+    *items = (Item*)malloc(*num_items * sizeof(Item));
+    if (!*items) {
+        fprintf(stderr, "Error: Memory allocation failed for items.\n");
+        return 103;  // Memory allocation failure
+    }
 
-        if (take.value > curr.value ||
-            (take.value == curr.value &&
-             (take.count < curr.count ||
-              (take.count == curr.count && take.id_sum < curr.id_sum)))) {
-          dp[w][v] = take;
+    // Parse item fields and compute ratio
+    for (int i = 0; i < *num_items; i++) {
+        int base_idx = 4 + i * 4;
+        (*items)[i].id = atoi(argv[base_idx]);
+        (*items)[i].weight = atoi(argv[base_idx + 1]);
+        (*items)[i].volume = atoi(argv[base_idx + 2]);
+        (*items)[i].value = atoi(argv[base_idx + 3]);
+
+        // If weight is zero, assign a very high ratio (prefer it)
+        if ((*items)[i].weight > 0) {
+            (*items)[i].ratio = (double)(*items)[i].value / (*items)[i].weight;
+        } else {
+            (*items)[i].ratio = 1e9;
         }
-      }
     }
-  }
 
-  // Return the filled DP table
-  *dp_ptr = dp;
+    return 0;  // Success
 }
 
-/*
- * Backtrack to find selected item IDs
- * Start from bottom-right of the table and trace what items were chosen
- */
-int *backtrack_items(int capacity, int max_volume, int num_items,
-                     struct Item *items, struct Cell **dp, int *out_count) {
-  int *selected_ids = malloc(num_items * sizeof(int));
-  int count = 0;
-  int curr_weight = capacity, curr_volume = max_volume;
+// Sorts the items in descending order based on value-to-weight ratio using qsort
+void sortItemsByRatio(Item *items, int num_items) {
+    qsort(items, num_items, sizeof(Item), compareItems);
+}
 
-  for (int item_idx = num_items - 1; item_idx >= 0; --item_idx) {
-    int wt = items[item_idx].weight;
-    int vol = items[item_idx].volume;
-    int val = items[item_idx].value;
-    int id = items[item_idx].id;
+// Greedy selection based on sorted ratio, respecting both weight and volume limits
+int greedyKnapsack(Item *items, int num_items, int capacity, int max_volume, int *selected_ids) {
+    int total_weight = 0;
+    int total_volume = 0;
+    int selected_count = 0;
 
-    if (curr_weight >= wt && curr_volume >= vol) {
-      struct Cell prev = dp[curr_weight - wt][curr_volume - vol];
-      struct Cell curr = dp[curr_weight][curr_volume];
-      if (curr.value == prev.value + val && curr.count == prev.count + 1 &&
-          curr.id_sum == prev.id_sum + id) {
-        selected_ids[count++] = id;
-        curr_weight -= wt;
-        curr_volume -= vol;
-      }
+    for (int i = 0; i < num_items; i++) {
+        if (total_weight + items[i].weight <= capacity &&
+            total_volume + items[i].volume <= max_volume) {
+            
+            selected_ids[selected_count] = items[i].id;
+            selected_count++;
+            total_weight += items[i].weight;
+            total_volume += items[i].volume;
+        }
     }
-  }
 
-  *out_count = count;
-  return selected_ids;
+    return selected_count;
+}
+
+// Outputs selected item IDs space-separated
+void printSelectedIds(int *selected_ids, int count) {
+    for (int i = 0; i < count; i++) {
+        printf("%d", selected_ids[i]);
+        if (i < count - 1) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+}
+
+// Frees dynamically allocated memory
+void cleanup(Item *items, int *selected_ids) {
+    free(items);
+    free(selected_ids);
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 4) {
-    fprintf(stderr, "Error: Insufficient arguments.\n");
-    return 1;
-  }
+    int capacity, max_volume, num_items;
+    Item *items;
 
-  // Parse knapsack capacity, max volume, and number of items
-  int capacity = atoi(argv[1]);
-  int max_volume = atoi(argv[2]);
-  int num_items = atoi(argv[3]);
-
-  // Ensure all item quadruplets (id, weight, volume, value) are present
-  if (argc < 4 + num_items * 4) {
-    fprintf(stderr, "Error: Expected more item arguments.\n");
-    return 1;
-  }
-
-  struct Item *items = parse_items(argc, argv, num_items);
-
-  struct Cell **dp;
-  fill_dp_table(capacity, max_volume, num_items, items, &dp);
-
-  int selected_count;
-  int *selected_ids = backtrack_items(capacity, max_volume, num_items, items,
-                                      dp, &selected_count);
-
-  // Output selected item IDs
-  if (selected_count == 0) {
-    return 0;
-  } else {
-    // Sort in ascending order (to ensure consistent output with earlier IDs)
-    qsort(selected_ids, selected_count, sizeof(int), compare_ids);
-    for (int i = 0; i < selected_count; ++i) {
-      printf("%d", selected_ids[i]);
-      if (i != selected_count - 1)
-        printf(" ");
+    // Parse command-line arguments and validate input
+    int parse_result = parseArguments(argc, argv, &capacity, &max_volume, &num_items, &items);
+    if (parse_result != 0) {
+        return parse_result;  // Return specific error code
     }
-    printf("\n");
-  }
 
-  for (int curr_weight = 0; curr_weight <= capacity; ++curr_weight) {
-    free(dp[curr_weight]);
-  }
+    // Allocate memory for selected item IDs
+    int *selected_ids = (int*)malloc(num_items * sizeof(int));
+    if (!selected_ids) {
+        fprintf(stderr, "Error: Memory allocation failed for selected_ids.\n");
+        free(items);
+        return 104;  // Memory allocation failure for selected_ids
+    }
 
-  free(dp);
-  free(items);
-  free(selected_ids);
+    // Sort by value-to-weight ratio
+    sortItemsByRatio(items, num_items);
 
-  return 0;
+    // Greedy selection of items
+    int selected_count = greedyKnapsack(items, num_items, capacity, max_volume, selected_ids);
+
+    // Output selected item IDs
+    printSelectedIds(selected_ids, selected_count);
+
+    // Cleanup
+    cleanup(items, selected_ids);
+
+    return 0;
 }
