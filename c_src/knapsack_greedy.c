@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #define HUGE_RATIO 1e9
-// Structure to store each item's attributes and value-to-(weight+volume) ratio
+
 typedef struct {
     int id;
     int weight;
@@ -11,7 +11,7 @@ typedef struct {
     double ratio;
 } Item;
 
-// Comparison function for qsort - sorts in descending order by ratio
+// sorts in descending order by ratio
 int compareItems(const void *a, const void *b) {
     Item *itemA = (Item*)a;
     Item *itemB = (Item*)b;
@@ -31,7 +31,7 @@ int compareItems(const void *a, const void *b) {
     return itemA->id - itemB->id;
 }
 
-// Parses command-line arguments and populates the items array
+// Parses command-line arguments and populates the items parameter
 int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *num_items, Item **items) {
     if (argc < 4) {
         fprintf(stderr, "Error: Not enough arguments. Usage: <capacity> <max_volume> <num_items> <id1> <w1> <v1> <val1> ...\n");
@@ -76,12 +76,10 @@ int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *
     return 0;  // Success
 }
 
-// Sorts the items in descending order based on value-to-weight ratio using qsort
 void sortItemsByRatio(Item *items, int num_items) {
     qsort(items, num_items, sizeof(Item), compareItems);
 }
 
-// Greedy selection based on sorted ratio, respecting both weight and volume limits
 int greedyKnapsack(Item *items, int num_items, int capacity, int max_volume, int *selected_ids) {
     int total_weight = 0;
     int total_volume = 0;
@@ -101,7 +99,6 @@ int greedyKnapsack(Item *items, int num_items, int capacity, int max_volume, int
     return selected_count;
 }
 
-// Outputs selected item IDs space-separated
 void printSelectedIds(int *selected_ids, int count) {
     for (int i = 0; i < count; i++) {
         printf("%d", selected_ids[i]);
@@ -112,7 +109,6 @@ void printSelectedIds(int *selected_ids, int count) {
     printf("\n");
 }
 
-// Frees dynamically allocated memory
 void cleanup(Item *items, int *selected_ids) {
     free(items);
     free(selected_ids);
@@ -122,13 +118,11 @@ int main(int argc, char *argv[]) {
     int capacity, max_volume, num_items;
     Item *items;
 
-    // Parse command-line arguments and validate input
     int parse_result = parseArguments(argc, argv, &capacity, &max_volume, &num_items, &items);
     if (parse_result != 0) {
         return parse_result;  // Return specific error code
     }
 
-    // Allocate memory for selected item IDs
     int *selected_ids = (int*)malloc(num_items * sizeof(int));
     if (!selected_ids) {
         fprintf(stderr, "Error: Memory allocation failed for selected_ids.\n");
@@ -136,16 +130,12 @@ int main(int argc, char *argv[]) {
         return 104;  // Memory allocation failure for selected_ids
     }
 
-    // Sort by value-to-weight ratio
     sortItemsByRatio(items, num_items);
 
-    // Greedy selection of items
     int selected_count = greedyKnapsack(items, num_items, capacity, max_volume, selected_ids);
 
-    // Output selected item IDs
     printSelectedIds(selected_ids, selected_count);
 
-    // Cleanup
     cleanup(items, selected_ids);
 
     return 0;
