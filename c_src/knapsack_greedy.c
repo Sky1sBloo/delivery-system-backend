@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Structure to store each item's attributes and value-to-weight ratio
 typedef struct {
@@ -9,6 +10,16 @@ typedef struct {
     int value;
     double ratio;
 } Item;
+
+// Comparison function for qsort - sorts in descending order by ratio
+int compareItems(const void *a, const void *b) {
+    Item *itemA = (Item*)a;
+    Item *itemB = (Item*)b;
+    
+    if (itemA->ratio > itemB->ratio) return -1;  // A should come before B
+    if (itemA->ratio < itemB->ratio) return 1;   // B should come before A
+    return 0;  // Equal ratios
+}
 
 // Parses command-line arguments and populates the items array
 int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *num_items, Item **items) {
@@ -42,27 +53,20 @@ int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *
         (*items)[i].value = atoi(argv[base_idx + 3]);
 
         // If weight is zero, assign a very high ratio (prefer it)
-        if ((*items)[i].weight > 0) {
-            (*items)[i].ratio = (double)(*items)[i].value / (*items)[i].weight;
+        int denom = weight + volume;
+        if (denom > 0) {
+            (*items)[i].ratio = (double)value / denom;
         } else {
-            (*items)[i].ratio = 1e9;
+            (*items)[i].ratio = 1e9;  // Prefer items with 0 weight+volume
         }
     }
 
     return 0;  // Success
 }
 
-// Sorts the items in descending order based on value-to-weight ratio
+// Sorts the items in descending order based on value-to-weight ratio using qsort
 void sortItemsByRatio(Item *items, int num_items) {
-    for (int i = 0; i < num_items - 1; i++) {
-        for (int j = 0; j < num_items - i - 1; j++) {
-            if (items[j].ratio < items[j + 1].ratio) {
-                Item temp = items[j];
-                items[j] = items[j + 1];
-                items[j + 1] = temp;
-            }
-        }
-    }
+    qsort(items, num_items, sizeof(Item), compareItems);
 }
 
 // Greedy selection based on sorted ratio, respecting both weight and volume limits
