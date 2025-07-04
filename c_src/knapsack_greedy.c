@@ -11,7 +11,6 @@ typedef struct {
     double ratio;
 } Item;
 
-// sorts in descending order by ratio
 int compareItems(const void *a, const void *b) {
     Item *itemA = (Item*)a;
     Item *itemB = (Item*)b;
@@ -31,11 +30,11 @@ int compareItems(const void *a, const void *b) {
     return itemA->id - itemB->id;
 }
 
-// Parses command-line arguments and populates the items parameter
+// Parse arguments and outputs it to [items] param
 int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *num_items, Item **items) {
     if (argc < 4) {
         fprintf(stderr, "Error: Not enough arguments. Usage: <capacity> <max_volume> <num_items> <id1> <w1> <v1> <val1> ...\n");
-        return 101;  // Error code for insufficient base arguments
+        return 101;      
     }
 
     *capacity = atoi(argv[1]);
@@ -45,16 +44,14 @@ int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *
     int expected_args = 4 + (*num_items * 4);
     if (argc != expected_args) {
         fprintf(stderr, "Error: Expected %d arguments, got %d\n", expected_args, argc);
-        return 102;  // Error code for incorrect total number of arguments
-    }
+        return 102;     }
 
     *items = (Item*)malloc(*num_items * sizeof(Item));
     if (!*items) {
         fprintf(stderr, "Error: Memory allocation failed for items.\n");
-        return 103;  // Memory allocation failure
-    }
+        return 103;     }
 
-        // Parse item fields and compute ratio = value / (weight + volume)
+        // item fields and compute ratio = value / (weight + volume)
         for (int i = 0; i < *num_items; i++) {
             int base_idx = 4 + i * 4;
             
@@ -73,8 +70,7 @@ int parseArguments(int argc, char *argv[], int *capacity, int *max_volume, int *
             (*items)[i].ratio  = ratio;
         }
 
-    return 0;  // Success
-}
+    return 0;  }
 
 void sortItemsByRatio(Item *items, int num_items) {
     qsort(items, num_items, sizeof(Item), compareItems);
